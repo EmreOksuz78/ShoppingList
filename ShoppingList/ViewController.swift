@@ -11,6 +11,10 @@ import CoreData
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
     @IBOutlet weak var tableView: UITableView!
+    
+    var nameArray = [String]()
+    var idArray = [UUID]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -36,12 +40,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10
+        return nameArray.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
-        cell.textLabel?.text = "Hello"
+        cell.textLabel?.text = nameArray[indexPath.row]
         return cell
     }
 
@@ -58,9 +62,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let results = try context.fetch(fetchRequest)
             
             for result in results as! [NSManagedObject]{
-                let name = result.value(forKey: "name") as? String
-                print(name)
+                if let name = result.value(forKey: "name") as? String{
+                nameArray.append(name)
+                }
+                
+                if let id = result.value(forKey: "id") as? UUID{
+                    idArray.append(id)
+                }
             }
+            
+            tableView.reloadData()
             
         }catch{
             print("Error")
