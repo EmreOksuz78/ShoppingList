@@ -14,8 +14,64 @@ class DetailsViewController: UIViewController,UIImagePickerControllerDelegate,UI
     @IBOutlet weak var priceTextField: UITextField!
     @IBOutlet weak var sizeTextField: UITextField!
     
+    var selectedProductName = ""
+    var selectedProductUUID : UUID?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if selectedProductName != ""{
+            //Core Data show information of selected product
+            
+            if let uuidString = selectedProductUUID?.uuidString{
+                
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                let context = appDelegate.persistentContainer.viewContext
+                
+                let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Shopping")
+                fetchRequest.predicate = NSPredicate(format: "id = %@", uuidString)
+                fetchRequest.returnsObjectsAsFaults = false
+                
+                do {
+                    let results = try context.fetch(fetchRequest)
+                    
+                    if results.count > 0 {
+                        
+                        for result in results as! [NSManagedObject]{
+                            
+                            if let name = result.value(forKey: "name") as? String {
+                                nameTextField.text = name
+                            }
+                            
+                            if let price = result.value(forKey: "price") as? Int{
+                                priceTextField.text = String(price)
+                            }
+                            
+                            if let size = result.value(forKey: "size") as? String{
+                                sizeTextField.text = size
+                            }
+                            
+                            if let imageData = result.value(forKey: "image") as? Data {
+                                let image = UIImage(data: imageData)
+                                imageView.image = image
+                            }
+                            
+                        }
+                        
+                    }
+                    
+                }catch {
+                    print("Error")
+                }
+                
+                
+            }
+            
+        }else{
+            nameTextField.text = ""
+            priceTextField.text = ""
+            sizeTextField.text = ""
+        }
 
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(closeKeyboard))
         
@@ -77,6 +133,9 @@ class DetailsViewController: UIViewController,UIImagePickerControllerDelegate,UI
         } catch {
             print("Error saving data: \(error)")
         }
+        
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "dataEntered"), object: nil)
+        self.navigationController?.popViewController(animated: true)
         
     }
     
